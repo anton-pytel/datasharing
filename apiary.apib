@@ -1,0 +1,514 @@
+FORMAT: 1A
+HOST: http://polls.apiblueprint.org/
+
+# Product catalogue
+
+Rozhranie pre prácu FE s MPC
+
+
+
+Zoznam rozhraní
+---------------
+- **[/offers]** obchodné prípady (inštancie ponúk pre zákazníkov/potenciálnych zákazníkov) 
+- **[/offers/{session_id}/groups/{group_id}]** Zoskupenia subponúk do logických celkov (predaj FTTH, GSM...)
+- **[/offers/{session_id}/groups/{group_id}/parts]** subponuky pre obchodný prípad 
+- **[/offers/{session_id}/groups/{group_id}/parts/{part_id}]** detail subponuky pre vyskladanie predajného panelu 
+- **[/offers/{session_id}/groups/{group_id}/parts/{part_id}/basket]** košík pre subponuku
+- **[/offers/{session_id}/groups/{group_id}/parts/{part_id}/panel]** update subponuky pre nastavenie výsledku eligibility 
+- **[/offers/{session_id}/groups/{group_id}/basket]** Sumár košíkov subkošíkov pre obchodný prípad 
+- **[/offers/{session_id}/groups/{group_id}/panel]** Sumár ponúk, v ktorých nastala zmena po vložení produktu do košíka 
+
+TODO:
+-----
+- dáta
+    - benefity
+    - validačné sekcie
+- rozhrania
+    - zoznam hodnôt vstupných parametrov [/offer_parameters]
+    - zoznam invetory items [/inventory]
+
+Nákres
+------
+![zakreslenie rozhraní](https://raw.githubusercontent.com/anton-pytel/rest-architecture/master/rest_fe_mpc.png )
+
+## Offers Collection [/offers]
+Zoznam všetkých vytvorených obchodných prípadov - inštancia ponuky pre zákazníka
+
+### Create a New Offer [POST]
+Vytvoriť novú inštanciu ponuky
++ Request (application/json)
+
+        {
+            "channel" : "POS",
+            "process" : "new",
+            "part_group": "FTTH",
+            "created_by": "x_user_name_pos",
+            "user" : {
+                    "cust_type": "COMPA",
+                    "ICO": "1234511",
+                    "RC": "",
+                    "user_id": ""
+                },
+            "date_creation": "2015-12-23T09:10:04.257890-01:00"
+        }
+
++ Response 201 (application/json)
+
+    + Headers
+    
+            Location: /offers/127
+    + Body
+    
+            {
+                "session_id": 127,
+                "channel" : "POS",
+                "process" : "new",
+                "created_by": "x_user_name_pos",
+                "user" : {
+                        "cust_type": "COMPA",
+                        "ICO": "1234511",
+                        "RC": "",
+                        "user_id": ""
+                    },
+                "date_creation": "2015-12-23T09:10:04.257890-01:00"
+            }
+
+### List All Offers [GET]
+Načítať zoznam inštancií ponúk.
++ Response 200 (application/json)
+
+        [
+            {
+              "session_id": 124,
+              "channel" : "POS",
+              "process" : "new",
+              "part_group": "animal",
+              "created_by": "x_user_name_pos",
+              "user" : {
+                    "cust_type": "PRIVA",
+                    "ICO": "",
+                    "RC": "0202020/123",
+                    "user_id": ""
+                },
+              "date_creation": "2015-12-23T08:58:04.257890-01:00",
+              "self_uri": "/offers/124",
+              "basket_uri": "/offers/124/baskets"
+            },
+            {
+              "session_id": 125,
+              "channel" : "TLS",
+              "process" : "change",
+              "part_group": "FTTH",
+              "created_by": "x_user_name_pos",
+              "user" : 
+              "user" : {
+                    "cust_type": "SELF",
+                    "ICO": "132458",
+                    "RC": "",
+                    "user_id": ""
+                },
+              "date_creation": "2015-12-23T09:10:04.257890-01:00",
+              "self_uri": "/offers/125",
+              "basket_uri": "/offers/125/baskets" 
+            },
+            {
+              "session_id": 126,
+              "channel" : "POS",
+              "process" : "new",
+              "part_group": "Trade_MKT",
+              "created_by": "x_user_name_pos",
+              "user" : {
+                    "cust_type": "COMPA",
+                    "ICO": "",
+                    "RC": "",
+                    "user_id": "123654"
+                },
+              "date_creation": "2015-12-23T09:10:04.257890-01:00",
+              "self_uri": "/offers/126",
+              "basket_uri": "/offers/126/baskets" 
+            }
+        ]
+
+## Group detail [/offers/{session_id}/groups/{group_id}]
+Informácie na vytvorenie predajného panelu
+
++ Parameters
+    + group_id (number) - ID of the partial offer in the form of an integer
+
+### View a group detail [GET]
++ Response 200 (application/json)
+
+        {
+              "group_id": 1,
+              "name": "FTTH",
+              "self_uri": "/offers/{session_id}/groups/1",
+              "parts_uri": [
+                "/offers/{session_id}/groups/1/parts/3",
+                "/offers/{session_id}/groups/1/parts/4",
+                "/offers/{session_id}/groups/1/parts/5",
+                "/offers/{session_id}/groups/1/parts/6"
+              ]
+              
+        }
+
+## Offer groups [/offers/{session_id}/groups]
+Zoznam všetkých logických skupín ponúk.
+
+### List All groups [GET]
+
++ Response 200 (application/json)
+
+        [
+            {
+              "group_id": 1,
+              "name": "FTTH",
+              "self_uri": "/offers/{session_id}/groups/1",
+              "parts_uri": [
+                "/offers/{session_id}/groups/1/parts/3",
+                "/offers/{session_id}/groups/1/parts/4",
+                "/offers/{session_id}/groups/1/parts/5",
+                "/offers/{session_id}/groups/1/parts/6"
+              ]
+              
+            },
+            {
+              "group_id": 2,
+              "name": "Animal",
+              "self_uri": "/offers/{session_id}/groups/2",
+              "parts_uri": [
+                "/offers/{session_id}/groups/2/parts/1",
+                "/offers/{session_id}/groups/2/parts/2"
+              ]
+              
+            }
+            
+        ]
+
+## Partial offer Collection [/offers/{session_id}/groups/{group_id}/parts]
+Zoznam všetkých "sub" ponúk.
+
+### List All Partial Offers [GET]
+
++ Response 200 (application/json)
+
+        [
+            {
+              "partial_offer_id": 1,
+              "name": "animal pausaly",
+              "self_uri": "/offers/{session_id}/groups/{group_id}/parts/1"
+              
+            },
+            {
+              "partial_offer_id": 2,
+              "name": "animal zariadenia",
+              "self_uri": "/offers/{session_id}/groups/{group_id}/parts/2"
+            },
+            {
+              "partial_offer_id": 3,
+              "name": "FTTH pausaly",
+              "self_uri": "/offers/{session_id}/groups/{group_id}/parts/3"
+            },
+            {
+              "partial_offer_id": 4,
+              "name": "FTTH TV baliky",
+              "self_uri": "/offers/{session_id}/groups/{group_id}/parts/4"
+            },
+            {
+              "partial_offer_id": 5,
+              "name": "FTTH doplnkove sluzby",
+              "self_uri": "/offers/{session_id}/groups/{group_id}/parts/5"
+            },
+            {
+              "partial_offer_id": 6,
+              "name": "FTTH HW",
+              "self_uri": "/offers/{session_id}/groups/{group_id}/parts/6"
+            }
+            {
+              "partial_offer_id": 7,
+              "name": "FTTH benefity",
+              "self_uri": "/offers/{session_id}/groups/{group_id}/parts/7"
+            }
+        ]
+
+## Partial offer detail [/offers/{session_id}/groups/{group_id}/parts/{partial_offer_id}]
+Informácie na vytvorenie predajného panelu
+
++ Parameters
+    + partial_offer_id (number) - ID of the partial offer in the form of an integer
+
+### View a partial offer detail [GET]
++ Response 200 (application/json)
+
+        {
+            "name": "FTTH pausaly",
+            "containers": [
+                {
+                    "container_id": "1"
+                    "name": "Kombinované pausaly",
+                    "self_offer_uri" : "/offers/{session_id}/groups/{group_id}/parts/3/containers/1",
+                    "tags": [
+                        "tag1",
+                        "tag2"
+                    ],
+                    "attributes": [
+                        { "name1" : "value1" },
+                        { "name2" : "value2" },
+                        { "name3" : ["value31", "value32"] }
+                    ],
+                    "products": [
+                        { 
+                            "product_oid": "12212",
+                            "name": "Duo play",
+                            "self_offer_uri" : "/offers/{session_id}/groups/{group_id}/parts/3/containers/1/products/12212",
+                            "add_to_baket_uri": "/offers/{session_id}/groups/{group_id}/parts/3/basket",
+                            "self_inventory_uri" : "/inventory/1028",
+                            "price" : [
+                                { 
+                                    "type": "cycle_fee",
+                                    "final_amount": {
+                                        "wVATamount": "8",
+                                        "amount_unit": "Eur",
+                                        "VAT": "2",
+                                        "vat_unit": "Eur"
+                                    },
+                                    "discount": {
+                                        "wVATamount": "5",
+                                        "amount_unit": "Eur",
+                                        "VAT": "1",
+                                        "vat_unit": "Eur",
+                                        "discount_uri" : "/offers/{session_id}/groups/{group_id}/parts/7/containers/1/products/10"
+                                    }
+                                    
+                                },
+                                {
+                                    "type": "oneshot_fee",
+                                    "final_amount": {
+                                        "wVATamount": "2",
+                                        "amount_unit": "Eur",
+                                        "VAT": "0.04",
+                                        "vat_unit": "Eur"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "container_id": "2"
+                    "name": "Internet pausaly",
+                    "self_offer_uri" : "/offers/{session_id}/groups/{group_id}/parts/3/containers/2",
+                    "tags": [
+                        "tag1",
+                        "tag2"
+                    ],
+                    "attributes": [
+                        { "name1" : "value1" },
+                        { "name2" : "value2" },
+                        { "name3" : ["value31", "value32"] }
+                    ],
+                    "products": [
+                        { 
+                            "product_oid": "12213",
+                            "name": "TV pausal",
+                            "self_offer_uri" : "/offers/{session_id}/groups/{group_id}/parts/3/containers/1/products/12213",
+                            "add_to_baket_uri": "/offers/{session_id}/groups/{group_id}/parts/3/basket",
+                            "self_inventory_uri" : "/inventory/1029",
+                            "price" : [
+                                { 
+                                    "type": "cycle_fee",
+                                    "final_amount": {
+                                        "wVATamount": "8",
+                                        "amount_unit": "Eur",
+                                        "VAT": "2",
+                                        "vat_unit": "Eur"
+                                    },
+                                    "discount": {
+                                        "wVATamount": "5",
+                                        "amount_unit": "Eur",
+                                        "VAT": "1",
+                                        "vat_unit": "Eur",
+                                        "discount_uri" : "/offers/{session_id}/groups/{group_id}/parts/7/containers/1/products/10"
+                                    }
+                                    
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        
+
+## Basket items [/offers/{session_id}/groups/{group_id}/parts/{partial_offer_id}/basket]
+Košík subponuky
+
+### Add/remove item to/from basket [POST]
+Vloženie odobratie položky do/z košíka formou nastavenia počtu.
+- ak combobox, tak aktuálne zvolenú položku dať count 1, pôvodnú 0.
+- ak checkbox, zaškrtnuté count 1, nezaškrtnuté count 0
+- ...
+- úspešná úprava košíka vráti linky na subponuky, ktoré sú ovplyvnené danou zmenou a preto je pre ne potrebné akutalizovať predajný panel
+
++ Request (application/json)
+
+        {
+            [
+                { 
+                    "product_oid" : "12213",
+                    "count" : "1"
+                },
+                { 
+                    "product_oid" : "12214",
+                    "count" : "0"
+                },
+                
+        }
+
++ Response 200 (application/json)
+    + Body
+
+            {
+                "affected_parts": 
+                [
+                "/offers/{session_id}/groups/{group_id}/parts/3/panel",
+                "/offers/{session_id}/groups/{group_id}/parts/4/panel"
+                ]
+            }
+        
++ Response 400 (application/json)      
+    + Body
+
+            {
+               "Errors": [
+                    { 
+                        "message": "Item cannot be changed",
+                        "product_oid": "12213",
+                        "count": "1"
+                    },
+                    { 
+                        "message": "Item cannot be changed",
+                        "product_oid": "12214",
+                        "count": "0"
+                    }
+               ]
+               
+            }
+
+### View basket detail [GET]
+Zobrazenie položiek košíka sub ponuky
+
++ Response 200 (application/json)
+
+        {
+            "Total": [
+               { 
+                    "type": "cycle_fee",
+                    "amount": "25"
+                },
+                { 
+                    "type": "oneshot_fee",
+                    "amount": "25"
+                }
+                
+            ],
+            "products": [
+                { 
+                    "product_oid": "12213",
+                    "name": "TV pausal",
+                    "price": [
+                        { 
+                            "type": "monthly fee",
+                            "final_amount": {
+                                "wVATamount": "8",
+                                "amount_unit": "Eur",
+                                "VAT": "2",
+                                "vat_unit": "Eur"
+                            },
+                            "discount": {
+                                "wVATamount": "5",
+                                "amount_unit": "Eur",
+                                "VAT": "1",
+                                "vat_unit": "Eur"
+                            }
+                            
+                        }
+                    ]
+                }
+            ] 
+        }
+
+
+
+## Panel items [/offers/{session_id}/groups/{group_id}/parts/{partial_offer_id}/panel]
+Výsledok eligibility 
+
+### View panel detail [GET]
+Dáta potrebné na úpravu panela po vložení položky do košíka
++ Response 200 (application/json)
+
+        {
+            
+            "products": [
+                { 
+                    "product_oid": "12212",
+                    "container_id": "1",
+                    "state": "not chosen",
+                    "eligibility": "choosable",
+                    "count": "0"
+                },
+                    "product_oid": "12213",
+                    "container_id": "2",
+                    "state": "chosen",
+                    "eligibility": "choosable",
+                    "count": "1"
+                }
+            ]  
+        }
+        
+
+## Offer's summary of baskets [/offers/{session_id}/groups/{group_id}/baskets]
+Zoznam všetkých košíkov subponúk
+
+### Basket summary and subbasket uris  [GET]
+
++ Response 200 (application/json)
+
+        {
+            
+            "Total": [
+               { 
+                    "type": "cycle_fee",
+                    "amount": "25"
+                },
+                { 
+                    "type": "oneshot_fee",
+                    "amount": "25"
+                }
+                
+            ],
+            "baskets_uri":[
+                "/offers/{session_id}/groups/{group_id}/parts/3/basket",
+                "/offers/{session_id}/groups/{group_id}/parts/4/basket",
+                "/offers/{session_id}/groups/{group_id}/parts/5/basket",
+                "/offers/{session_id}/groups/{group_id}/parts/6/basket",
+            ]
+        }        
+
+
+## Offer's summary of panels [/offers/{session_id}/groups/{group_id}/panels]
+Zoznam častí z ktorých sa predajný panel skladá
+
+### URIs of all parts of panel [GET]
+Vráti zoznam liniek, ktoré je potrebné na update celého panelu
+
++ Response 200 (application/json)
+
+        {
+            "baskets_uri":[
+                "/offers/{session_id}/groups/{group_id}/parts/3/panel",
+                "/offers/{session_id}/groups/{group_id}/parts/4/panel",
+                "/offers/{session_id}/groups/{group_id}/parts/5/panel",
+                "/offers/{session_id}/groups/{group_id}/parts/6/panel",
+            ]
+        }   
+
